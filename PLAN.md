@@ -12,7 +12,12 @@
 - **Main character:** Lyasan, a K-pop idol who fights zombies
 
 ## 2. Tech / Architecture Decisions
-- Vanilla JS with ES modules (`<script type="module">`). No bundler.
+- Vanilla JS loaded as ordered global `<script>` tags in `index.html` (no
+  bundler, no module system). Each file exposes a global (`Game`, `Player`,
+  `Sfx`, `Rng`, …); load order in `index.html` is the dependency order.
+- Determinism: `src/rng.js` provides a seeded xorshift32 RNG (`Rng`). Each run
+  seeds from the current date (a "daily seed") mixed with a per-run counter, so
+  perk/type/modifier rolls are reproducible within a run but vary between runs.
 - Single fixed-timestep game loop using `requestAnimationFrame` with a
   delta-time accumulator (target 60fps; logic decoupled from render rate).
 - Entity model: plain JS classes (`Player`, `Zombie`, `Projectile`), each with
@@ -32,20 +37,25 @@ kpop-zombie-slayer/
 ├── PLAN.md             # this file
 ├── PROGRESS.md         # running log of what's built
 └── src/
-    ├── main.js         # bootstraps game loop, ties modules together
+    ├── main.js         # bootstraps game loop, HiDPI canvas, asset load, auto-pause
     ├── config.js       # all tunable constants
     ├── input.js        # keyboard + mouse state
-    ├── game.js         # game state, wave logic, win/lose, scoring
+    ├── rng.js          # seeded xorshift32 RNG (daily seed)
+    ├── audio.js        # Sfx: Web Audio SFX + procedural synthwave music
+    ├── render.js       # asset loader + entity/background draw helpers
+    ├── game.js         # game state, wave logic, win/lose, scoring, difficulty, modifiers
     ├── entities/
-    │   ├── player.js   # Lyasan: movement, attacks, health, energy
-    │   ├── zombie.js   # zombie: chase, contact damage, death
-    │   └── projectile.js # sound-wave projectile (later phase)
-    ├── systems/
-    │   ├── render.js   # draws HUD, entities, screens
-    │   └── collision.js # hit detection helpers
+    │   ├── player.js         # Lyasan: movement, dash, attacks, health, energy
+    │   ├── zombie.js         # all zombie types (data-driven by `type`)
+    │   ├── projectile.js     # player sound-wave projectile (pierce + ricochet)
+    │   ├── enemyProjectile.js# ranged-zombie projectile
+    │   └── particle.js       # death/impact particles
     └── ui/
-        └── screens.js  # title, game over, restart
+        ├── screens.js  # title, difficulty, perk-select, pause, leaderboard, game over, HUD
+        └── perks.js    # perk definitions + perk-select draw
 ```
+(No `systems/` dir was created; render lives at `src/render.js` and collision
+helpers live inline in `game.js`.)
 (Structure may be simplified in early milestones and expanded as features land.
 Claude Code: propose adjustments in the plan step, not mid-code.)
 
@@ -141,6 +151,52 @@ Claude Code: propose adjustments in the plan step, not mid-code.)
       definitions and `drawPerkSelect(ctx, options)`. Perks stored as a flat
       modifier object on `Game` and applied at point-of-use (not baked into
       config constants).
+
+### Phase 4 — Depth, feel & meta (implemented; supersedes deferred P6 audio)
+
+- [x] **P13 — Procedural audio (`src/audio.js`, `Sfx`):** Web Audio API, no asset
+      files needed. Synthesized SFX (swing, shoot, hit, death, playerHit,
+      waveClear, perkPick, bossWarning) and a looping procedural synthwave track
+      (kick/snare/hihat/sawtooth-bass step sequencer). Master volume persisted to
+      `localStorage` (`kzs_volume`); `M` toggles mute; pause screen has −/+ volume
+      buttons. Replaces the old asset-dependent P6 plan; `assets/audio/*` remain
+      `.placeholder` stubs and are unused.
+
+- [x] **P14 — Difficulty select:** New `'difficulty'` state between title and play.
+      Three tiers (`DIFFICULTIES` in `game.js`): Easy / Normal / Hard, each with
+      `hpMult`, `spawnMult`, `contactMult`, `bonusHp`. Card UI; click to start.
+
+- [x] **P15 — More zombie types (data-driven):** Four new types on the shared
+      `Zombie` class, selected by `ZOMBIE_WEIGHTS` per wave:
+      - **ranged** — keeps distance (`RANGED_STOP_DIST`) and fires
+        `EnemyProjectile`s at Lyasan (`src/entities/enemyProjectile.js`).
+      - **exploder** — on death deals `EXPLODER_BLAST_DAMAGE` in
+        `EXPLODER_BLAST_RADIUS`.
+      - **shield** — frontal arc blocks player projectiles; takes `meleeMult`×
+        melee damage (kill it up close).
+      - **splitter** — on death spawns small fast **splinterlings**.
+      Behaviours are config flags (`onDeath`, `blocksProjectiles`, `meleeMult`),
+      read by generic code — no per-type branches.
+
+- [x] **P16 — Challenge modifiers:** From `MODIFIER_START_WAVE` (8), each wave may
+      roll a modifier from `CHALLENGE_MODIFIERS` (horde, berserker, armored,
+      frenzy, relentless, cursed). Data-driven multiplier fields; announced with a
+      banner and previewed on the between-wave screen.
+
+- [x] **P17 — Expanded perks:** New perks beyond the P12 pool — vampiric swing,
+      afterimage (dash leaves a damaging trail), double-tap (every 3rd shot
+      refunds energy), ricochet projectiles, berserker, lucky strike (periodic
+      guaranteed health drop). Perk-select cards also selectable via keys `1/2/3`.
+
+- [x] **P18 — Pickups & drops:** Zombie deaths can drop energy/health pickups
+      (`SPAWN_SAFE_DIST`-aware) that Lyasan collects by walking over them.
+
+- [x] **P19 — Leaderboard & run summary:** Scores persisted to `localStorage`;
+      `'leaderboard'` state (open with `H` from title). Game Over shows a run
+      summary (time, total damage, highest combo) and highlights the current run.
+
+- [x] **P20 — Extra juice:** Hit-stop on impactful hits, floating damage numbers,
+      toast notifications, death-shake, and a next-wave composition preview.
 
 ## 5. Acceptance Criteria (V1 "done")
 - Lyasan moves smoothly with WASD, can't leave the canvas.

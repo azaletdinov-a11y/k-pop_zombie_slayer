@@ -10,42 +10,76 @@ class Zombie {
     this.maxHp         = stats.hp;
     this.scoreMult     = stats.scoreMult;
     this.contactDamage = stats.contactDamage || CONTACT_DAMAGE;
+    this.onDeath           = stats.onDeath || null;
+    this.blocksProjectiles = !!stats.blocksProjectiles;
+    this.meleeMult         = stats.meleeMult || 1;
     this.hitFlash      = 0;
+    this.hpBarTimer    = 0;
+    this.facingAngle   = 0;
     this.emergeTimer   = EMERGE_DURATION;
-    const pos = Zombie.randomEdgePoint(this.radius);
+    this.shootTimer    = 0;
+    this.pendingShots  = [];
+    const pos = Zombie.randomArenaPoint(this.radius);
     this.x = pos.x;
     this.y = pos.y;
   }
 
   takeDamage(amount) {
     this.hp -= amount;
-    this.hitFlash = 0.1;
+    this.hitFlash   = 0.1;
+    this.hpBarTimer = 1.5;
   }
 
   get dead()   { return this.hp <= 0; }
   get isBoss() { return this.type === 'boss'; }
 
-  static randomEdgePoint(radius) {
+  static randomArenaPoint(radius) {
     const margin = (radius || ZOMBIE_RADIUS) + 1;
-    const edge   = Math.floor(Math.random() * 4);
-    switch (edge) {
-      case 0: return { x: Math.random() * CANVAS_WIDTH,  y: -margin };
-      case 1: return { x: CANVAS_WIDTH  + margin,        y: Math.random() * CANVAS_HEIGHT };
-      case 2: return { x: Math.random() * CANVAS_WIDTH,  y: CANVAS_HEIGHT + margin };
-      default: return { x: -margin,                      y: Math.random() * CANVAS_HEIGHT };
-    }
+    return {
+      x: margin + Math.random() * (CANVAS_WIDTH  - margin * 2),
+      y: margin + Math.random() * (CANVAS_HEIGHT - margin * 2),
+    };
   }
 
   update(dt, target) {
-    const dx = target.x - this.x;
-    const dy = target.y - this.y;
+    const dx   = target.x - this.x;
+    const dy   = target.y - this.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist > 0) {
-      this.x += (dx / dist) * this.speed * dt;
-      this.y += (dy / dist) * this.speed * dt;
+
+    if (this.type === 'ranged') {
+      // Move toward player only beyond stop distance
+      if (dist > RANGED_STOP_DIST && dist > 0) {
+        this.x += (dx / dist) * this.speed * dt;
+        this.y += (dy / dist) * this.speed * dt;
+      }
+      // Shoot on interval
+      this.shootTimer += dt;
+      if (this.shootTimer >= RANGED_SHOOT_INTERVAL && dist > 0) {
+        this.shootTimer = 0;
+        this.pendingShots.push({ x: this.x, y: this.y, tx: target.x, ty: target.y });
+      }
+    } else {
+      if (dist > 0) {
+        this.facingAngle = Math.atan2(dy, dx);
+        this.x += (dx / dist) * this.speed * dt;
+        this.y += (dy / dist) * this.speed * dt;
+      }
     }
+
     if (this.emergeTimer > 0) this.emergeTimer -= dt;
     if (this.hitFlash    > 0) this.hitFlash    -= dt;
+    if (this.hpBarTimer  > 0) this.hpBarTimer  -= dt;
+  }
+
+  _drawEyes(ctx, size, color, yFactor = 0.8) {
+    const eyeOff = this.radius * 0.3;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(this.x - eyeOff, this.y - eyeOff * yFactor, size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(this.x + eyeOff, this.y - eyeOff * yFactor, size, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   draw(ctx) {
@@ -121,15 +155,72 @@ class Zombie {
       ctx.textAlign = 'center';
       ctx.fillText('BOSS', this.x, hpBarY - 3);
 
-      // Eyes (red, larger)
-      const eyeOff = this.radius * 0.3;
-      ctx.fillStyle = '#ff5555';
+      this._drawEyes(ctx, 5, '#ff5555', 0.5);
+    } else if (this.type === 'exploder') {
       ctx.beginPath();
-      ctx.arc(this.x - eyeOff, this.y - eyeOff * 0.5, 5, 0, Math.PI * 2);
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = '#ff5722';
       ctx.fill();
+      const pulse = 0.5 + 0.5 * Math.abs(Math.sin(Date.now() / 180));
+      ctx.save();
+      ctx.globalAlpha = pulse * 0.7;
+      ctx.strokeStyle = '#ffab40';
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(this.x + eyeOff, this.y - eyeOff * 0.5, 5, 0, Math.PI * 2);
+      ctx.arc(this.x, this.y, this.radius + 5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+      const r = this.radius * 0.4;
+      ctx.strokeStyle = '#7f2800';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(this.x - r, this.y - r); ctx.lineTo(this.x + r, this.y + r);
+      ctx.moveTo(this.x + r, this.y - r); ctx.lineTo(this.x - r, this.y + r);
+      ctx.stroke();
+    } else if (this.type === 'shield') {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = '#455a64';
       ctx.fill();
+      ctx.strokeStyle = '#37474f';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      const fa = this.facingAngle;
+      ctx.save();
+      ctx.strokeStyle = '#80d8ff';
+      ctx.lineWidth = 4;
+      ctx.globalAlpha = 0.85;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius + 5, fa - Math.PI * 0.6, fa + Math.PI * 0.6);
+      ctx.stroke();
+      ctx.restore();
+      this._drawEyes(ctx, 3, '#1a237e');
+    } else if (this.type === 'splitter') {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = '#ce93d8';
+      ctx.fill();
+      ctx.save();
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      ctx.arc(this.x + this.radius * 0.5, this.y - this.radius * 0.3, this.radius * 0.65, 0, Math.PI * 2);
+      ctx.fillStyle = '#ba68c8';
+      ctx.fill();
+      ctx.restore();
+      this._drawEyes(ctx, 2.5, '#4a148c');
+    } else if (this.type === 'ranged') {
+      // Body
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = '#ff6d00';
+      ctx.fill();
+      // Outer ring (signals ranged type)
+      ctx.strokeStyle = '#ffab40';
+      ctx.lineWidth   = 2;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius + 4, 0, Math.PI * 2);
+      ctx.stroke();
+      this._drawEyes(ctx, 2.5, '#7f3300');
     } else {
       // Body
       ctx.beginPath();
@@ -144,17 +235,27 @@ class Zombie {
         ctx.stroke();
       }
 
-      // Eyes — scale with radius
-      const eyeOff  = this.radius * 0.3;
-      const eyeSize = this.type === 'fast' ? 2 : 3;
-      const eyeColor = this.type === 'fast' ? '#5a6e00' : '#1b5e20';
-      ctx.fillStyle = eyeColor;
-      ctx.beginPath();
-      ctx.arc(this.x - eyeOff, this.y - eyeOff * 0.8, eyeSize, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(this.x + eyeOff, this.y - eyeOff * 0.8, eyeSize, 0, Math.PI * 2);
-      ctx.fill();
+      // Eyes — small types get smaller, darker-lime eyes
+      const small = this.type === 'fast' || this.type === 'splinterling';
+      this._drawEyes(ctx, small ? 2 : 3, small ? '#5a6e00' : '#1b5e20');
+    }
+
+    // HP bar for non-boss zombies when damaged
+    if (!this.isBoss && this.hp < this.maxHp && this.hpBarTimer > 0) {
+      const barW   = 40;
+      const barH   = 3;
+      const barX   = this.x - barW / 2;
+      const barY   = this.y - this.radius - 7;
+      const fill   = Math.max(0, this.hp / this.maxHp);
+      const alpha  = Math.min(1, this.hpBarTimer * 2);
+      const hue    = Math.round(fill * 120);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = '#333';
+      ctx.fillRect(barX, barY, barW, barH);
+      ctx.fillStyle = 'hsl(' + hue + ',90%,45%)';
+      ctx.fillRect(barX, barY, Math.round(barW * fill), barH);
+      ctx.restore();
     }
 
     // Hit flash overlay (all types)

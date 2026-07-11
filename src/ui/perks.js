@@ -64,6 +64,48 @@ const PERK_POOL = [
       game.comboWindowBonus += 0.5;
     }
   },
+  {
+    id: 'vampiricswing',
+    label: 'Vampiric Swing',
+    desc: ['Melee kills restore', '1 HP each.'],
+    apply(game) { game.vampiricSwing = true; }
+  },
+  {
+    id: 'afterimage',
+    label: 'Afterimage',
+    desc: ['Dash triggers a', 'melee AoE burst.'],
+    apply(game) { game.afterimage = true; }
+  },
+  {
+    id: 'doubletap',
+    label: 'Double-Tap',
+    desc: ['Every 3rd shot', 'costs no energy.'],
+    apply(game) { game.doubleTap = true; }
+  },
+  {
+    id: 'ricochet',
+    label: 'Ricochet',
+    desc: ['Projectiles bounce', 'once off walls.'],
+    apply(game) { game.ricochet = true; }
+  },
+  {
+    id: 'rage',
+    label: 'Rage',
+    desc: ['Melee dmg scales', 'with missing HP.'],
+    apply(game) { game.berserkerPerk = true; }
+  },
+  {
+    id: 'luckystrike',
+    label: 'Lucky Strike',
+    desc: ['Every 5th kill drops', 'a health pickup.'],
+    apply(game) { game.luckyStrike = true; }
+  },
+  {
+    id: 'overclock',
+    label: 'Overclock',
+    desc: ['Shot cooldown -20%,', 'energy regen +8/s.'],
+    apply(game) { game.player.projCooldownMult *= 0.8; game.player.energyRegenBonus += 8; }
+  },
 ];
 
 const CARD_W   = 180;
@@ -74,7 +116,7 @@ function _cardRect(i) {
   const totalW = 3 * CARD_W + 2 * CARD_GAP;
   const x = (CANVAS_WIDTH - totalW) / 2 + i * (CARD_W + CARD_GAP);
   const y = (CANVAS_HEIGHT - CARD_H) / 2;
-  return { x, y };
+  return { x, y, w: CARD_W, h: CARD_H };
 }
 
 function drawPerkSelect(ctx, cards, hoveredIdx) {
@@ -127,29 +169,20 @@ function drawPerkSelect(ctx, cards, hoveredIdx) {
       ctx.fillText(line, cx, r.y + 84 + li * 22);
     });
 
-    // Click hint
+    // Pick hint
     ctx.fillStyle = hov ? '#ff69b4' : '#555';
     ctx.font = '12px sans-serif';
-    ctx.fillText('click to pick', cx, r.y + CARD_H - 14);
+    ctx.fillText('click  or  [' + (i + 1) + ']', cx, r.y + CARD_H - 14);
   }
 }
 
 function getPerkCardIndex(mx, my, cards) {
   for (let i = 0; i < cards.length; i++) {
-    const r = _cardRect(i);
-    if (mx >= r.x && mx <= r.x + CARD_W && my >= r.y && my <= r.y + CARD_H) {
-      return i;
-    }
+    if (pointInRect(mx, my, _cardRect(i))) return i;
   }
   return -1;
 }
 
 function samplePerks(count) {
-  const pool   = PERK_POOL.slice();
-  const result = [];
-  while (result.length < count && pool.length > 0) {
-    const idx = Math.floor(Math.random() * pool.length);
-    result.push(pool.splice(idx, 1)[0]);
-  }
-  return result;
+  return Rng.sample(PERK_POOL, count);
 }

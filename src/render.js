@@ -5,6 +5,8 @@ const Assets = {
   load(onReady) {
     const manifest = [
       { key: 'background',    src: 'assets/images/background.png' },
+      { key: 'title_bg',      src: 'assets/images/title_bg.png' },
+      { key: 'pause_bg',      src: 'assets/images/pause_bg.png' },
       { key: 'player',        src: 'assets/images/player.png' },
       { key: 'zombie_normal', src: 'assets/images/zombies/normal.png' },
       { key: 'zombie_fast',   src: 'assets/images/zombies/fast.png' },

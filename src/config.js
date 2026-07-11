@@ -10,11 +10,18 @@ const PLAYER_SPEED  = 200; // pixels per second
 // Zombies
 const ZOMBIE_SPAWN_INTERVAL = 1.2;  // seconds between individual spawns within a wave
 
+// Behavior flags: onDeath ('explode' | 'split'), blocksProjectiles (frontal shield arc),
+// meleeMult (melee damage taken multiplier)
 const ZOMBIE_TYPES = {
-  normal: { radius: 16, speed: 80,  hp: 2,  color: '#4caf50', scoreMult: 1   },
-  fast:   { radius: 11, speed: 150, hp: 1,  color: '#c6e829', scoreMult: 1.5 },
-  tank:   { radius: 26, speed: 40,  hp: 8,  color: '#1b5e20', scoreMult: 3   },
-  boss:   { radius: 36, speed: 55,  hp: 30, color: '#8b0000', scoreMult: 5, contactDamage: 2 },
+  normal:      { radius: 16, speed: 80,  hp: 2,  color: '#4caf50', scoreMult: 1   },
+  fast:        { radius: 11, speed: 150, hp: 1,  color: '#c6e829', scoreMult: 1.5 },
+  tank:        { radius: 26, speed: 40,  hp: 8,  color: '#1b5e20', scoreMult: 3   },
+  ranged:      { radius: 13, speed: 65,  hp: 3,  color: '#ff6d00', scoreMult: 2   },
+  exploder:    { radius: 18, speed: 55,  hp: 3,  color: '#ff5722', scoreMult: 2.5, onDeath: 'explode' },
+  shield:      { radius: 20, speed: 50,  hp: 6,  color: '#455a64', scoreMult: 3,   blocksProjectiles: true, meleeMult: 3 },
+  splitter:    { radius: 16, speed: 90,  hp: 3,  color: '#ce93d8', scoreMult: 2,   onDeath: 'split' },
+  splinterling:{ radius: 8,  speed: 150, hp: 1,  color: '#c6e829', scoreMult: 0.5 },
+  boss:        { radius: 36, speed: 55,  hp: 30, color: '#8b0000', scoreMult: 5, contactDamage: 2 },
 };
 
 // Kept for backwards compat with randomEdgePoint margin
@@ -24,17 +31,31 @@ const ZOMBIE_COLOR  = '#4caf50';
 
 // Spawn weight tables — first entry whose minWave <= current wave is used
 const ZOMBIE_WEIGHTS = [
-  { minWave: 6, weights: { normal: 40, fast: 35, tank: 25 } },
-  { minWave: 4, weights: { normal: 60, fast: 40, tank: 0  } },
-  { minWave: 1, weights: { normal: 100, fast: 0, tank: 0  } },
+  { minWave: 7, weights: { normal: 25, fast: 20, tank: 15, ranged: 12, exploder: 8,  shield: 10, splitter: 10 } },
+  { minWave: 6, weights: { normal: 30, fast: 28, tank: 20, ranged: 0,  exploder: 7,  shield: 8,  splitter: 7  } },
+  { minWave: 5, weights: { normal: 50, fast: 32, tank: 0,  ranged: 0,  exploder: 5,  shield: 0,  splitter: 13 } },
+  { minWave: 4, weights: { normal: 55, fast: 35, tank: 0,  ranged: 0,  exploder: 0,  shield: 0,  splitter: 10 } },
+  { minWave: 1, weights: { normal: 100, fast: 0, tank: 0,  ranged: 0,  exploder: 0,  shield: 0,  splitter: 0  } },
 ];
 
-const FAST_WAVE_START     = 4;
-const TANK_WAVE_START     = 6;
+const RANGED_STOP_DIST       = 180;
+const RANGED_SHOOT_INTERVAL  = 2.5;
+const ENEMY_PROJ_SPEED       = 120;
+const ENEMY_PROJ_RANGE       = 400;
+const ENEMY_PROJ_DAMAGE      = 1;
 const BOSS_WAVE_INTERVAL  = 5; // every Nth wave is a boss wave
+
+// Exploder zombie
+const EXPLODER_BLAST_RADIUS = 70;
+const EXPLODER_BLAST_DAMAGE = 3;
+
+// Challenge modifiers
+const MODIFIER_START_WAVE  = 8;
+const MODIFIER_BANNER_DUR  = 2.5; // seconds banner is visible
 
 // Zombie emergence
 const EMERGE_DURATION = 0.4; // seconds to rise from underground
+const SPAWN_SAFE_DIST = 150; // minimum spawn distance from the player
 
 // Difficulty scaling
 const SCALE_START_WAVE    = 3;    // scaling begins after this wave

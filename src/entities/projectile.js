@@ -1,17 +1,18 @@
 class Projectile {
-  constructor(x, y, angle) {
+  constructor(x, y, angle, bounces = 0) {
     this.x    = x;
     this.y    = y;
     this.vx   = Math.cos(angle);
     this.vy   = Math.sin(angle);
     this.dist = 0;
-    this.hitSet = new Set(); // zombie references already hit by this projectile
+    this.bouncesLeft = bounces;
+    this.hitSet = new Set();
   }
 
   get expired() {
-    return this.dist >= PROJ_RANGE
-      || this.x < 0 || this.x > CANVAS_WIDTH
-      || this.y < 0 || this.y > CANVAS_HEIGHT;
+    if (this.dist >= PROJ_RANGE) return true;
+    if (this.bouncesLeft === 0) return this.x < 0 || this.x > CANVAS_WIDTH || this.y < 0 || this.y > CANVAS_HEIGHT;
+    return false;
   }
 
   update(dt) {
@@ -19,6 +20,15 @@ class Projectile {
     this.x    += this.vx * step;
     this.y    += this.vy * step;
     this.dist += step;
+
+    if (this.bouncesLeft > 0) {
+      let bounced = false;
+      if      (this.x < 2)                { this.x = 2;                  this.vx =  Math.abs(this.vx); bounced = true; }
+      else if (this.x > CANVAS_WIDTH - 2) { this.x = CANVAS_WIDTH - 2;  this.vx = -Math.abs(this.vx); bounced = true; }
+      if      (this.y < 2)                { this.y = 2;                  this.vy =  Math.abs(this.vy); bounced = true; }
+      else if (this.y > CANVAS_HEIGHT - 2){ this.y = CANVAS_HEIGHT - 2; this.vy = -Math.abs(this.vy); bounced = true; }
+      if (bounced) { this.bouncesLeft--; this.dist = 0; this.hitSet.clear(); }
+    }
   }
 
   draw(ctx) {
