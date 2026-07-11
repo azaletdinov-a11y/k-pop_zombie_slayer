@@ -1,10 +1,20 @@
 const canvas = document.getElementById('game');
 const ctx    = canvas.getContext('2d');
-canvas.width  = CANVAS_WIDTH;
-canvas.height = CANVAS_HEIGHT;
+
+// HiDPI / Retina fix: render at device pixel density, display at logical size
+const dpr = window.devicePixelRatio || 1;
+canvas.width  = CANVAS_WIDTH  * dpr;
+canvas.height = CANVAS_HEIGHT * dpr;
+canvas.style.width  = CANVAS_WIDTH  + 'px';
+canvas.style.height = CANVAS_HEIGHT + 'px';
+ctx.scale(dpr, dpr);
 
 Input.init(canvas);
 const game = new Game();
+
+// Auto-pause when tab is hidden or window loses focus
+document.addEventListener('visibilitychange', () => { if (document.hidden) game._autoPause(); });
+window.addEventListener('blur', () => game._autoPause());
 
 let lastTime    = 0;
 let accumulator = 0;

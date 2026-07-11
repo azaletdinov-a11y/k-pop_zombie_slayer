@@ -16,6 +16,7 @@ class Player {
     this.speedMult        = 1;
     this.arcBonus         = 0;
     this.energyRegenBonus = 0;
+    this.projCooldownMult = 1;
     // Dash
     this.dashTimer    = 0;
     this.dashCooldown = 0;
@@ -105,7 +106,7 @@ class Player {
   tryShoot() {
     if (this.projCooldown > 0 || this.energy < PROJ_COST) return false;
     this.energy       -= PROJ_COST;
-    this.projCooldown  = PROJ_COOLDOWN;
+    this.projCooldown  = PROJ_COOLDOWN * this.projCooldownMult;
     return true;
   }
 
