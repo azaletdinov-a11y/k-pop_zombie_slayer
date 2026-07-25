@@ -98,9 +98,14 @@ Claude Code: propose adjustments in the plan step, not mid-code.)
       Tunable: `COMBO_WINDOW`, `COMBO_TIER_SIZE` (5), `COMBO_DAMAGE_STEP` (0.25),
       `COMBO_MAX_MULT` (3).
 
-- [ ] **P6 — Art & audio:** Deferred until assets are available. Swap placeholder
-      shapes for neon/synthwave sprites; add SFX (swing, hit, death, wave start);
-      add looping background music. No code planned until assets exist.
+- [x] **P6 — Art & audio:** Done in two later passes. Audio became procedural
+      (see P13 — no asset files needed). Sprite art landed as top-down pixel-art
+      PNGs: `player_lyasan.png` plus one per zombie type in
+      `assets/images/zombies/`. Entities draw sprites via `drawSprite()` in
+      `render.js` (rotated to facing, `SPRITE_DRAW_SCALE` in config), falling
+      back to the original placeholder shapes if an image fails to load.
+      Mechanic overlays (boss HP bar/label, exploder pulse ring, shield block
+      arc) render on top of sprites.
 
 ### Phase 3 — Build order: P7 → P8 → P9 → P10 → P11 → P12
 

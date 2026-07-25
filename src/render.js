@@ -8,10 +8,16 @@ const Assets = {
       { key: 'title_bg',      src: 'assets/images/title_bg.png' },
       { key: 'pause_bg',      src: 'assets/images/pause_bg.png' },
       { key: 'player',        src: 'assets/images/player.png' },
-      { key: 'zombie_normal', src: 'assets/images/zombies/normal.png' },
-      { key: 'zombie_fast',   src: 'assets/images/zombies/fast.png' },
-      { key: 'zombie_tank',   src: 'assets/images/zombies/tank.png' },
-      { key: 'zombie_boss',   src: 'assets/images/zombies/boss.png' },
+      { key: 'player_sprite',       src: 'assets/images/player_lyasan.png' },
+      { key: 'zombie_normal',       src: 'assets/images/zombies/zombie_normal.png' },
+      { key: 'zombie_fast',         src: 'assets/images/zombies/zombie_fast.png' },
+      { key: 'zombie_tank',         src: 'assets/images/zombies/zombie_tank.png' },
+      { key: 'zombie_ranged',       src: 'assets/images/zombies/zombie_ranged.png' },
+      { key: 'zombie_exploder',     src: 'assets/images/zombies/zombie_exploder.png' },
+      { key: 'zombie_shield',       src: 'assets/images/zombies/zombie_shield.png' },
+      { key: 'zombie_splitter',     src: 'assets/images/zombies/zombie_splitter.png' },
+      { key: 'zombie_splinterling', src: 'assets/images/zombies/splinterling.png' },
+      { key: 'zombie_boss',         src: 'assets/images/zombies/boss_fallen_idol.png' },
     ];
 
     let pending = manifest.length;
@@ -32,6 +38,17 @@ const Assets = {
     return img && img.complete && img.naturalWidth > 0;
   }
 };
+
+// Draw an entity sprite centered at (x, y), rotated to `angle`.
+// Sprites are authored facing "up", so angle 0 (facing right) needs +90°.
+function drawSprite(ctx, key, x, y, size, angle) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle + Math.PI / 2);
+  ctx.imageSmoothingEnabled = false; // keep pixel art crisp
+  ctx.drawImage(Assets.images[key], -size / 2, -size / 2, size, size);
+  ctx.restore();
+}
 
 function drawArenaFloor(ctx) {
   const W = CANVAS_WIDTH;
