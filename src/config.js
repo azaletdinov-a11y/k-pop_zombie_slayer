@@ -53,6 +53,10 @@ const EXPLODER_BLAST_DAMAGE = 3;
 const MODIFIER_START_WAVE  = 8;
 const MODIFIER_BANNER_DUR  = 2.5; // seconds banner is visible
 
+// Sprite rendering — sprite content fills ~80% of its canvas, so draw larger
+// than the hitbox diameter to make the visible body match the collision circle
+const SPRITE_DRAW_SCALE = 1.35;
+
 // Zombie emergence
 const EMERGE_DURATION = 0.4; // seconds to rise from underground
 const SPAWN_SAFE_DIST = 150; // minimum spawn distance from the player

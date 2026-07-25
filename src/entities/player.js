@@ -159,10 +159,16 @@ class Player {
     }
 
     // Body
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-    ctx.fillStyle = PLAYER_COLOR;
-    ctx.fill();
+    const hasSprite = Assets.ready('player_sprite');
+    if (hasSprite) {
+      drawSprite(ctx, 'player_sprite', this.x, this.y,
+        this.radius * 2 * SPRITE_DRAW_SCALE, this.facing);
+    } else {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = PLAYER_COLOR;
+      ctx.fill();
+    }
 
     // Hit flash overlay
     if (this.hitFlash > 0) {
@@ -175,17 +181,19 @@ class Player {
       ctx.restore();
     }
 
-    // Direction nub
-    const nubX = this.x + Math.cos(this.facing) * this.radius * 0.6;
-    const nubY = this.y + Math.sin(this.facing) * this.radius * 0.6;
-    ctx.beginPath();
-    ctx.arc(nubX, nubY, this.radius * 0.35, 0, Math.PI * 2);
-    ctx.fillStyle = '#fff';
-    ctx.fill();
+    if (!hasSprite) {
+      // Direction nub
+      const nubX = this.x + Math.cos(this.facing) * this.radius * 0.6;
+      const nubY = this.y + Math.sin(this.facing) * this.radius * 0.6;
+      ctx.beginPath();
+      ctx.arc(nubX, nubY, this.radius * 0.35, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
 
-    ctx.fillStyle = '#fff';
-    ctx.font = '11px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('Hero', this.x, this.y - this.radius - 6);
+      ctx.fillStyle = '#fff';
+      ctx.font = '11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Hero', this.x, this.y - this.radius - 6);
+    }
   }
 }
