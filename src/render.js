@@ -17,6 +17,8 @@ const Assets = {
       { key: 'zombie_splitter',     src: 'assets/images/zombies/zombie_splitter.png' },
       { key: 'zombie_splinterling', src: 'assets/images/zombies/splinterling.png' },
       { key: 'zombie_boss',         src: 'assets/images/zombies/boss_fallen_idol.png' },
+      { key: 'pickup_energy',       src: 'assets/images/icon_energy_lightstick.png' },
+      { key: 'pickup_health',       src: 'assets/images/icon_health_heart.png' },
     ];
 
     let pending = manifest.length;
@@ -46,6 +48,15 @@ function drawSprite(ctx, key, x, y, size, angle) {
   ctx.rotate(angle + Math.PI / 2);
   ctx.imageSmoothingEnabled = false; // keep pixel art crisp
   ctx.drawImage(Assets.images[key], -size / 2, -size / 2, size, size);
+  ctx.restore();
+}
+
+// Draw a non-rotating icon centered at (x, y) — pickups and HUD items, which
+// always face the viewer, unlike entity sprites.
+function drawIcon(ctx, key, x, y, size) {
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(Assets.images[key], x - size / 2, y - size / 2, size, size);
   ctx.restore();
 }
 
