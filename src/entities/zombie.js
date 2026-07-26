@@ -33,11 +33,13 @@ class Zombie {
   get dead()   { return this.hp <= 0; }
   get isBoss() { return this.type === 'boss'; }
 
+  // Uses the seeded Rng, not Math.random — spawn positions decide how a run
+  // plays out, so they must be reproducible from the seed.
   static randomArenaPoint(radius) {
     const margin = (radius || ZOMBIE_RADIUS) + 1;
     return {
-      x: margin + Math.random() * (CANVAS_WIDTH  - margin * 2),
-      y: margin + Math.random() * (CANVAS_HEIGHT - margin * 2),
+      x: margin + Rng.float() * (CANVAS_WIDTH  - margin * 2),
+      y: margin + Rng.float() * (CANVAS_HEIGHT - margin * 2),
     };
   }
 

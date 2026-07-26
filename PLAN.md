@@ -15,9 +15,12 @@
 - Vanilla JS loaded as ordered global `<script>` tags in `index.html` (no
   bundler, no module system). Each file exposes a global (`Game`, `Player`,
   `Sfx`, `Rng`, …); load order in `index.html` is the dependency order.
-- Determinism: `src/rng.js` provides a seeded xorshift32 RNG (`Rng`). Each run
-  seeds from the current date (a "daily seed") mixed with a per-run counter, so
-  perk/type/modifier rolls are reproducible within a run but vary between runs.
+- Determinism: `src/rng.js` provides a seeded xorshift32 RNG (`Rng`). Every roll
+  that affects how a run plays out — zombie type, spawn position, perk draw,
+  modifier, drops — goes through `Rng`. Purely cosmetic randomness (particles,
+  screen shake, audio noise) deliberately stays on `Math.random` so it cannot
+  perturb the seeded stream. Daily-challenge runs seed from the bare date;
+  normal runs seed from the clock so each is different (see P21).
 - Single fixed-timestep game loop using `requestAnimationFrame` with a
   delta-time accumulator (target 60fps; logic decoupled from render rate).
 - Entity model: plain JS classes (`Player`, `Zombie`, `Projectile`), each with
@@ -202,6 +205,19 @@ Claude Code: propose adjustments in the plan step, not mid-code.)
 
 - [x] **P20 — Extra juice:** Hit-stop on impactful hits, floating damage numbers,
       toast notifications, death-shake, and a next-wave composition preview.
+
+### Phase 5
+
+- [x] **P21 — Daily challenge:** `[D]` on the title screen starts a run seeded
+      with the bare date (`todaySeed()`, e.g. `20260725`), so every attempt on a
+      given day replays the exact same run and scores are comparable. Locked to
+      Normal difficulty for that reason. The seed is shown in the title hint bar
+      and as a gold `★ DAILY #…` badge in the HUD; daily entries are starred on
+      the leaderboard and stored with their seed.
+      Two bugs fixed to make this real: zombie spawn positions used
+      `Math.random`, so runs were never actually reproducible; and the non-daily
+      run counter lived on the `Game` instance, so a page refresh reset it and
+      replayed the previous session's first run.
 
 ## 5. Acceptance Criteria (V1 "done")
 - Lyasan moves smoothly with WASD, can't leave the canvas.
