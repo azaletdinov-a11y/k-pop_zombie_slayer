@@ -122,7 +122,7 @@ function isRestartClicked(mx, my) {
   return pointInRect(mx, my, RESTART_BTN);
 }
 
-function drawHUD(ctx, hp, maxHp, energy, score, kills, wave, combo, comboFlash, zombiesLeft, muted) {
+function drawHUD(ctx, hp, maxHp, energy, score, kills, wave, combo, comboFlash, zombiesLeft, muted, daily) {
   const PAD = 8;
 
   // --- Health bar ---
@@ -180,6 +180,13 @@ function drawHUD(ctx, hp, maxHp, energy, score, kills, wave, combo, comboFlash, 
   ctx.font = 'bold 15px sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText(score.toLocaleString() + '  |  Kills: ' + kills, CANVAS_WIDTH / 2, PAD + 14);
+
+  // --- Daily-challenge badge (under the score) ---
+  if (daily) {
+    ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 10px monospace';
+    ctx.fillText('★ DAILY #' + todaySeed(), CANVAS_WIDTH / 2, PAD + 27);
+  }
 
   // --- Wave number + mute indicator (top-right) ---
   ctx.fillStyle = '#ff69b4';
@@ -292,7 +299,7 @@ function drawTitle(ctx) {
   ctx.save();
   ctx.font = '13px monospace';
   ctx.textAlign = 'center';
-  const hintsText = '[H] High scores   [M] Toggle sound';
+  const hintsText = '[D] Daily #' + todaySeed() + '   [H] High scores   [M] Toggle sound';
   const hintsW = ctx.measureText(hintsText).width + 28;
   ctx.fillStyle = 'rgba(0,0,0,0.65)';
   ctx.beginPath();
@@ -549,8 +556,13 @@ function drawLeaderboard(ctx, scores) {
       ctx.fillText(entry.score.toLocaleString(), cx - 170, y);
       ctx.fillText(String(entry.wave),           cx + 30,  y);
       ctx.fillText(String(entry.kills),          cx + 95,  y);
-      ctx.fillText(entry.date || '',             cx + 160, y);
+      ctx.fillText((entry.daily ? '★ ' : '') + (entry.date || ''), cx + 160, y);
     });
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#666';
+    ctx.font = '11px sans-serif';
+    ctx.fillText('★ = daily challenge', cx, 126 + scores.length * 22 + 14);
   }
 
   ctx.textAlign = 'center';

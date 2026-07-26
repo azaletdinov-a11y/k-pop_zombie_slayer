@@ -17,6 +17,13 @@ const CHALLENGE_MODIFIERS = [
   { id: 'cursed',     label: 'CURSED',     color: '#bf360c', desc: 'Your damage -30%',   playerDmgMult: 0.7 },
 ];
 
+// Seed identifying today's daily challenge, e.g. 20260725. Everyone playing on
+// the same calendar day gets the same run.
+function todaySeed() {
+  const d = new Date();
+  return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+}
+
 class Game {
   constructor() {
     this.state          = 'title';
@@ -44,6 +51,11 @@ class Game {
       if (e.key === 'm' || e.key === 'M') { Sfx.toggleMute(); return; }
       if ((e.key === 'h' || e.key === 'H') && this.state === 'title')       { this.state = 'leaderboard'; return; }
       if ((e.key === 'h' || e.key === 'H') && this.state === 'leaderboard') { this.state = 'title';       return; }
+      // Must come before the any-key-starts fallthrough below
+      if ((e.key === 'd' || e.key === 'D') && this.state === 'title' && this.titleReady) {
+        this._startDaily();
+        return;
+      }
       if (this.state === 'perk-select' && ['1','2','3'].includes(e.key)) {
         const idx = parseInt(e.key, 10) - 1;
         if (idx < this.perkOptions.length) this._selectPerk(idx);
@@ -58,18 +70,31 @@ class Game {
     this.state = 'difficulty';
   }
 
-  _startWithDifficulty(diff) {
+  // Daily challenge: locked to Normal so scores are comparable, and seeded with
+  // the bare date so every attempt today replays the exact same run.
+  _startDaily() {
+    this._startWithDifficulty(DIFFICULTIES[1], true);
+  }
+
+  _startWithDifficulty(diff, daily) {
     this._init();
     this.difficulty = diff;
+    this.isDaily    = !!daily;
     if (diff.bonusHp > 0) {
       this.player.maxHp += diff.bonusHp;
       this.player.hp     = this.player.maxHp;
     }
-    const today = new Date();
-    const seed  = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-    // Mix in a per-run counter so same-day restarts don't replay identical perk/type/modifier rolls
-    this._runCounter = (this._runCounter || 0) + 1;
-    Rng.reset(seed ^ (this._runCounter * 0x9e3779b9));
+    const seed = todaySeed();
+    if (this.isDaily) {
+      Rng.reset(seed);
+    } else {
+      // Vary every run so same-day play doesn't replay identical perk/type/
+      // modifier rolls. Mixes the clock in as well as a counter — the counter
+      // alone lives on this instance, so a page refresh would reset it to 1
+      // and replay the previous session's first run.
+      this._runCounter = (this._runCounter || 0) + 1;
+      Rng.reset((Date.now() ^ (this._runCounter * 0x9e3779b9)) >>> 0);
+    }
     this._dailySeed = seed;
     Sfx.startMusic();
   }
@@ -128,8 +153,9 @@ class Game {
     // Challenge modifier
     this.activeModifier      = null;
     this.modifierBannerTimer = 0;
-    // Difficulty (overwritten by _startWithDifficulty)
+    // Difficulty / daily flag (overwritten by _startWithDifficulty)
     this.difficulty = DIFFICULTIES[1];
+    this.isDaily    = false;
     // Hit-stop, death shake
     this.hitStop         = 0;
     this.deathShakeTimer = 0;
@@ -425,6 +451,8 @@ class Game {
       score: this.score, wave: this.wave, kills: this.kills,
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       diff: this.difficulty.name[0],
+      daily: this.isDaily || undefined,
+      seed:  this.isDaily ? this._dailySeed : undefined,
     };
     scores.push(entry);
     scores.sort((a, b) => b.score - a.score);
@@ -832,7 +860,7 @@ class Game {
       const zombiesLeft = bossAlive
         ? 'BOSS ALIVE'
         : this.zombies.length + (this.waveTotal - this.waveSpawned);
-      drawHUD(ctx, this.player.hp, this.player.maxHp, this.player.energy, this.score, this.kills, this.wave, this.combo, this.comboFlash, zombiesLeft, Sfx.muted);
+      drawHUD(ctx, this.player.hp, this.player.maxHp, this.player.energy, this.score, this.kills, this.wave, this.combo, this.comboFlash, zombiesLeft, Sfx.muted, this.isDaily);
       drawZombieIndicators(ctx, this.zombies);
       if (this.modifierBannerTimer > 0) {
         drawModifierBanner(ctx, this.activeModifier, this.modifierBannerTimer);
