@@ -164,8 +164,8 @@ Claude Code: propose adjustments in the plan step, not mid-code.)
       waveClear, perkPick, bossWarning) and a looping procedural synthwave track
       (kick/snare/hihat/sawtooth-bass step sequencer). Master volume persisted to
       `localStorage` (`kzs_volume`); `M` toggles mute; pause screen has −/+ volume
-      buttons. Replaces the old asset-dependent P6 plan; `assets/audio/*` remain
-      `.placeholder` stubs and are unused.
+      buttons. Replaces the old asset-dependent P6 plan — the game ships no audio
+      files at all.
 
 - [x] **P14 — Difficulty select:** New `'difficulty'` state between title and play.
       Three tiers (`DIFFICULTIES` in `game.js`): Easy / Normal / Hard, each with
