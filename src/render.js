@@ -7,7 +7,6 @@ const Assets = {
       { key: 'background',    src: 'assets/images/floor_venue.png' },
       { key: 'title_bg',      src: 'assets/images/keyart_stage.png' },
       { key: 'pause_bg',      src: 'assets/images/pause_corridor.png' },
-      { key: 'player',        src: 'assets/images/player.png' },
       { key: 'player_sprite',       src: 'assets/images/player_lyasan.png' },
       { key: 'zombie_normal',       src: 'assets/images/zombies/zombie_normal.png' },
       { key: 'zombie_fast',         src: 'assets/images/zombies/zombie_fast.png' },
