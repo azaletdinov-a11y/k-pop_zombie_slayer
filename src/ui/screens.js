@@ -218,7 +218,7 @@ function drawHUD(ctx, hp, maxHp, energy, score, kills, wave, combo, comboFlash, 
 
 function drawTitle(ctx) {
   // Background — lighter overlay so the art reads better
-  drawScreenBg(ctx, 'title_bg', 0.30, '#0a0a0a');
+  drawScreenBg(ctx, 'title_bg', 0.18, '#0a0a0a');
 
   const cx = CANVAS_WIDTH / 2;
 
@@ -396,7 +396,7 @@ const RESUME_BTN = {
 };
 
 function drawPaused(ctx, acquiredPerks) {
-  drawScreenBg(ctx, 'pause_bg', 0.55, 'rgba(0,0,0,0.65)');
+  drawScreenBg(ctx, 'pause_bg', 0.32, 'rgba(0,0,0,0.65)');
 
   const cx = CANVAS_WIDTH / 2;
   const b  = RESUME_BTN;
@@ -510,8 +510,8 @@ const LEADERBOARD_BACK_BTN = {
 function drawLeaderboard(ctx, scores) {
   const cx = CANVAS_WIDTH / 2;
 
-  ctx.fillStyle = '#0a0a0a';
-  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  // Heavier scrim than the title screen — this is a dense list of small text
+  drawScreenBg(ctx, 'title_bg', 0.55, '#0a0a0a');
 
   ctx.fillStyle = '#ff69b4';
   ctx.font = 'bold 40px sans-serif';
@@ -694,7 +694,7 @@ function _diffCardRect(i) {
 }
 
 function drawDifficulty(ctx) {
-  drawScreenBg(ctx, 'title_bg', 0.58, '#0a0a0a');
+  drawScreenBg(ctx, 'title_bg', 0.42, '#0a0a0a');
 
   const cx = CANVAS_WIDTH / 2;
 
