@@ -198,6 +198,10 @@ Claude Code: propose adjustments in the plan step, not mid-code.)
 
 - [x] **P18 — Pickups & drops:** Zombie deaths can drop energy/health pickups
       (`SPAWN_SAFE_DIST`-aware) that Lyasan collects by walking over them.
+      Drawn as pixel-art icons (lightstick / heart) via `drawIcon()` at
+      `PICKUP_DRAW_SIZE`. Icons are authored on a coarse 16x16 logical grid
+      because they display at ~22px — art authored at sprite resolution is
+      destroyed by the nearest-neighbour downscale at that size.
 
 - [x] **P19 — Leaderboard & run summary:** Scores persisted to `localStorage`;
       `'leaderboard'` state (open with `H` from title). Game Over shows a run

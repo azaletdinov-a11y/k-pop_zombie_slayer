@@ -57,6 +57,10 @@ const MODIFIER_BANNER_DUR  = 2.5; // seconds banner is visible
 // than the hitbox diameter to make the visible body match the collision circle
 const SPRITE_DRAW_SCALE = 1.35;
 
+// On-screen size of dropped pickups. Purely visual — collection distance is
+// based on the player's radius, not this.
+const PICKUP_DRAW_SIZE = 22;
+
 // Zombie emergence
 const EMERGE_DURATION = 0.4; // seconds to rise from underground
 const SPAWN_SAFE_DIST = 150; // minimum spawn distance from the player

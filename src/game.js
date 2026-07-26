@@ -793,16 +793,22 @@ class Game {
     // Pickups
     for (const pk of this.pickups) {
       const pulse = 0.6 + 0.4 * Math.sin(now / 200 + pk.x);
-      const fade  = Math.min(1, pk.life * 0.8);
+      const fade  = Math.min(1, pk.life * 0.8); // dims over the last ~1.25s
+      const key   = pk.type === 'energy' ? 'pickup_energy' : 'pickup_health';
       ctx.save();
       ctx.globalAlpha = fade * pulse;
-      ctx.beginPath();
-      ctx.arc(pk.x, pk.y, 8, 0, Math.PI * 2);
-      ctx.fillStyle = pk.type === 'energy' ? '#29b6f6' : '#ff69b4';
-      ctx.fill();
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
+      if (Assets.ready(key)) {
+        // Outline is baked into the icon, so no stroke here
+        drawIcon(ctx, key, pk.x, pk.y, PICKUP_DRAW_SIZE);
+      } else {
+        ctx.beginPath();
+        ctx.arc(pk.x, pk.y, 8, 0, Math.PI * 2);
+        ctx.fillStyle = pk.type === 'energy' ? '#29b6f6' : '#ff69b4';
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
       ctx.restore();
     }
 
