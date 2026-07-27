@@ -16,4 +16,12 @@ body {
 #game {
   display: block;
   border: 2px solid #333;
+  /* Override the global border-box: the drawing surface must be exactly the
+     size we set, or the pixel art gets resampled (800x600 into 796x596). */
+  box-sizing: content-box;
+  /* Stop the browser claiming touches for scroll/zoom/double-tap */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
