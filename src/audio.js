@@ -2,7 +2,10 @@ const Sfx = (() => {
   let _ac     = null;
   let _gain   = null;
   let _muted  = false;
-  let _volume = parseFloat(localStorage.getItem('kzs_volume') || '0.8');
+  // Guard against a corrupt stored value: NaN would propagate into gain.value
+  // and silence everything with no visible cause.
+  let _volume = parseFloat(localStorage.getItem('kzs_volume'));
+  if (!(_volume >= 0 && _volume <= 1)) _volume = 0.8;
   let _unlocked = false;
 
   function _ctx() {
@@ -164,8 +167,9 @@ const Sfx = (() => {
     },
     get unlocked() { return _unlocked; },
     get state()    { return _ac ? _ac.state : 'none'; },
-    // True when audio is genuinely audible: context running and not muted.
-    get audible()  { return !!_ac && _ac.state === 'running' && !_muted; },
+    // Genuinely audible: running, unmuted AND turned up. Volume is persisted,
+    // so it can sit at 0 across sessions and look identical to working audio.
+    get audible()  { return !!_ac && _ac.state === 'running' && !_muted && _volume >= 0.01; },
 
     play(name)    { if (!_muted && sounds[name]) sounds[name](); },
     toggleMute()  {
@@ -175,7 +179,9 @@ const Sfx = (() => {
     },
     get muted()   { return _muted; },
     setVolume(v)  {
-      _volume = Math.max(0, Math.min(1, v));
+      // Snap to 2dp: stepping down by 0.2 four times lands on 5.55e-17, not 0 —
+      // silent, but > 0, so every "is there sound?" check would say yes.
+      _volume = Math.round(Math.max(0, Math.min(1, v)) * 100) / 100;
       if (_gain && !_muted) _gain.gain.value = _volume;
       localStorage.setItem('kzs_volume', String(_volume));
     },
