@@ -191,6 +191,17 @@ class Game {
     const spacePress = spaceDown && !this.prevSpace;
     this.prevSpace   = spaceDown;
 
+    // Touch: sticks only while actually playing; everywhere else taps are clicks
+    Input.playMode = (this.state === 'playing');
+    if (Input.pauseTapped) {
+      Input.pauseTapped = false;
+      if (this.state === 'playing') {
+        this._stateBeforePause = this.state;
+        this.state = 'paused';
+        return;
+      }
+    }
+
     if (this.state === 'title') {
       this.titleReady = true;
       if (clicked) this._startGame();
@@ -275,8 +286,10 @@ class Game {
       const preDashX = this.player.x, preDashY = this.player.y;
       if (this.player.tryDash() && this.afterimage) this._resolveAfterimage(preDashX, preDashY);
     }
-    if (clicked && this.player.tryAttack()) { Sfx.play('swing'); this._resolveSwing(); }
-    if (rightClick && this.player.tryShoot()) {
+    // Touch melee/fire are held rather than edge-triggered; the attack cooldowns
+    // already rate-limit them, so holding repeats at the normal rate.
+    if ((clicked || Input.melee) && this.player.tryAttack()) { Sfx.play('swing'); this._resolveSwing(); }
+    if ((rightClick || Input.fire) && this.player.tryShoot()) {
       Sfx.play('shoot');
       if (this.doubleTap) {
         this.shotCounter++;
@@ -868,6 +881,7 @@ class Game {
         : this.zombies.length + (this.waveTotal - this.waveSpawned);
       drawHUD(ctx, this.player.hp, this.player.maxHp, this.player.energy, this.score, this.kills, this.wave, this.combo, this.comboFlash, zombiesLeft, Sfx.muted, this.isDaily);
       drawZombieIndicators(ctx, this.zombies);
+      if (this.state === 'playing') drawTouchControls(ctx);
       if (this.modifierBannerTimer > 0) {
         drawModifierBanner(ctx, this.activeModifier, this.modifierBannerTimer);
       }
