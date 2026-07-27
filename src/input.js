@@ -133,5 +133,19 @@ const Input = {
     canvas.addEventListener('touchmove',   onMove,  { passive: false });
     canvas.addEventListener('touchend',    onEnd,   { passive: false });
     canvas.addEventListener('touchcancel', onEnd,   { passive: false });
+
+    // iOS has historically only accepted the unlock from touchend/click rather
+    // than touchstart, and resume() can be refused, so retry on every gesture
+    // until the context is actually running. Bound on window (not the canvas)
+    // so a tap anywhere counts, and left attached — it is a cheap early-out
+    // once running.
+    const retryUnlock = () => Sfx.unlock();
+    window.addEventListener('touchend', retryUnlock, { passive: true });
+    window.addEventListener('click',    retryUnlock, { passive: true });
+    window.addEventListener('pointerup', retryUnlock, { passive: true });
+    // Browsers suspend the context when the tab is backgrounded
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) Sfx.unlock();
+    });
   }
 };

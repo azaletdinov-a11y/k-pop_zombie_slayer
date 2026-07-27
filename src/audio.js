@@ -143,19 +143,29 @@ const Sfx = (() => {
     // game loop is silently ignored, and every sound is dropped for the whole
     // session. Playing a one-sample silent buffer is what actually flips it.
     unlock() {
-      const c = _ctx();
-      if (c.state === 'suspended') c.resume();
-      if (!_unlocked) {
+      if (_ac && _ac.state === 'running') { _unlocked = true; return 'running'; }
+      let c;
+      try { c = _ctx(); } catch (e) { return 'error'; }
+      // resume() is async and can reject if the gesture wasn't accepted; keep
+      // trying on every subsequent gesture rather than giving up after one.
+      if (c.state !== 'running') {
+        try { const pr = c.resume(); if (pr && pr.catch) pr.catch(() => {}); } catch (e) {}
+      }
+      // A one-sample silent buffer is what actually flips iOS out of suspended.
+      // Safe to repeat, so it runs on each attempt until the context is running.
+      try {
         const src = c.createBufferSource();
         src.buffer = c.createBuffer(1, 1, 22050);
         src.connect(c.destination);
         src.start(0);
-        _unlocked = true;
-      }
+      } catch (e) {}
+      _unlocked = (c.state === 'running');
       return c.state;
     },
     get unlocked() { return _unlocked; },
     get state()    { return _ac ? _ac.state : 'none'; },
+    // True when audio is genuinely audible: context running and not muted.
+    get audible()  { return !!_ac && _ac.state === 'running' && !_muted; },
 
     play(name)    { if (!_muted && sounds[name]) sounds[name](); },
     toggleMute()  {

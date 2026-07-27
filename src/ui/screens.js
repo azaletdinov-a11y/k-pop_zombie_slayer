@@ -261,9 +261,13 @@ function drawHUD(ctx, hp, maxHp, energy, score, kills, wave, combo, comboFlash, 
   ctx.font = 'bold 15px sans-serif';
   ctx.textAlign = 'right';
   ctx.fillText('Wave ' + wave, CANVAS_WIDTH - PAD, PAD + 14);
-  ctx.fillStyle = muted ? '#555' : '#4caf50';
-  ctx.font = '11px sans-serif';
-  ctx.fillText(muted ? '[M] muted' : '[M] ♪', CANVAS_WIDTH - PAD, PAD + 30);
+  // Distinguish "you muted it" from "the browser is blocking audio" — otherwise
+  // a silent game looks identical in both cases and is impossible to diagnose.
+  const blocked = !muted && Sfx.state !== 'running';
+  ctx.fillStyle = blocked ? '#ffc107' : (muted ? '#555' : '#4caf50');
+  ctx.font = blocked ? 'bold 11px monospace' : '11px sans-serif';
+  ctx.fillText(blocked ? '♪ BLOCKED - TAP' : (muted ? '[M] muted' : '[M] ♪'),
+               CANVAS_WIDTH - PAD, PAD + 30);
 
   // --- Zombies remaining (bottom-right) ---
   if (zombiesLeft !== null && zombiesLeft !== undefined) {
