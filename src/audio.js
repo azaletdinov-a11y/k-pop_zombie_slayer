@@ -3,6 +3,7 @@ const Sfx = (() => {
   let _gain   = null;
   let _muted  = false;
   let _volume = parseFloat(localStorage.getItem('kzs_volume') || '0.8');
+  let _unlocked = false;
 
   function _ctx() {
     if (!_ac) _ac = new (window.AudioContext || window.webkitAudioContext)();
@@ -136,6 +137,26 @@ const Sfx = (() => {
   };
 
   return {
+    // MUST be called synchronously from a real user-gesture handler (touchstart
+    // / mousedown / keydown). iOS Safari only lets an AudioContext leave the
+    // 'suspended' state inside a gesture — resuming a few ms later from the
+    // game loop is silently ignored, and every sound is dropped for the whole
+    // session. Playing a one-sample silent buffer is what actually flips it.
+    unlock() {
+      const c = _ctx();
+      if (c.state === 'suspended') c.resume();
+      if (!_unlocked) {
+        const src = c.createBufferSource();
+        src.buffer = c.createBuffer(1, 1, 22050);
+        src.connect(c.destination);
+        src.start(0);
+        _unlocked = true;
+      }
+      return c.state;
+    },
+    get unlocked() { return _unlocked; },
+    get state()    { return _ac ? _ac.state : 'none'; },
+
     play(name)    { if (!_muted && sounds[name]) sounds[name](); },
     toggleMute()  {
       _muted = !_muted;

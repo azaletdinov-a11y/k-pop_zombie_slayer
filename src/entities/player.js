@@ -33,9 +33,17 @@ class Player {
   }
 
   update(dt) {
-    // Facing follows the aim stick when it is engaged, otherwise the mouse
+    // Facing drives the melee arc, shot direction and standing dash — not just
+    // which way the sprite points — so the fallback has to suit the device.
     if (Input.aim.active) {
       this.facing = Math.atan2(Input.aim.y, Input.aim.x);
+    } else if (Input.touchActive) {
+      // No mouse on touch. Face where we're moving; when standing still, hold
+      // the last facing. (Reading Input.mouse here would aim at a stale menu
+      // tap position for the whole run.)
+      if (Input.move.active) {
+        this.facing = Math.atan2(Input.move.y, Input.move.x);
+      }
     } else {
       const mx = Input.mouse.x - this.x;
       const my = Input.mouse.y - this.y;

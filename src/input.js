@@ -31,7 +31,9 @@ const Input = {
   },
 
   init(canvas) {
+    // Audio must be unlocked from inside a gesture handler — see Sfx.unlock()
     window.addEventListener('keydown', e => {
+      Sfx.unlock();
       if (e.key === ' ') { this.keys.space = true; return; }
       if (e.key in this.keys) this.keys[e.key] = true;
     });
@@ -45,6 +47,7 @@ const Input = {
       this.mouse.y = p.y;
     });
     canvas.addEventListener('mousedown', e => {
+      Sfx.unlock();
       if (e.button === 0) this.mouse.left  = true;
       if (e.button === 2) this.mouse.right = true;
     });
@@ -61,6 +64,7 @@ const Input = {
     };
 
     const onStart = (e) => {
+      Sfx.unlock(); // synchronous, first thing in the gesture — iOS requires it
       this.touchActive = true;
       for (const t of e.changedTouches) {
         const p = this._toCanvas(canvas, t.clientX, t.clientY);
