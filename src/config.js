@@ -61,6 +61,17 @@ const SPRITE_DRAW_SCALE = 1.35;
 // based on the player's radius, not this.
 const PICKUP_DRAW_SIZE = 22;
 
+// Touch controls (logical canvas units). Sticks use a floating origin: wherever
+// the thumb lands becomes the centre, which is far more forgiving than a fixed
+// position when you cannot see your thumbs.
+const STICK_MAX_DIST = 60;  // travel for full deflection
+const STICK_DEADZONE = 10;  // ignore jitter below this
+const TOUCH_BTN_MELEE = { x: 705, y: 470, r: 44 };
+const TOUCH_BTN_DASH  = { x: 745, y: 360, r: 36 };
+// Sits between the centred score and the right-aligned wave text, so it does
+// not overlap either.
+const TOUCH_BTN_PAUSE = { x: 598, y: 28,  r: 20 };
+
 // Zombie emergence
 const EMERGE_DURATION = 0.4; // seconds to rise from underground
 const SPAWN_SAFE_DIST = 150; // minimum spawn distance from the player

@@ -33,20 +33,29 @@ class Player {
   }
 
   update(dt) {
-    // Facing follows mouse cursor
-    const mx = Input.mouse.x - this.x;
-    const my = Input.mouse.y - this.y;
-    if (mx !== 0 || my !== 0) {
-      this.facing = Math.atan2(my, mx);
+    // Facing follows the aim stick when it is engaged, otherwise the mouse
+    if (Input.aim.active) {
+      this.facing = Math.atan2(Input.aim.y, Input.aim.x);
+    } else {
+      const mx = Input.mouse.x - this.x;
+      const my = Input.mouse.y - this.y;
+      if (mx !== 0 || my !== 0) {
+        this.facing = Math.atan2(my, mx);
+      }
     }
 
-    // WASD movement / dash
+    // Movement: analog stick if engaged, otherwise WASD
     const k = Input.keys;
     let dx = 0, dy = 0;
-    if (k.a) dx -= 1;
-    if (k.d) dx += 1;
-    if (k.w) dy -= 1;
-    if (k.s) dy += 1;
+    if (Input.move.active) {
+      dx = Input.move.x;
+      dy = Input.move.y;
+    } else {
+      if (k.a) dx -= 1;
+      if (k.d) dx += 1;
+      if (k.w) dy -= 1;
+      if (k.s) dy += 1;
+    }
 
     if (this.dashTimer > 0) {
       this.dashTimer -= dt;
@@ -54,7 +63,9 @@ class Player {
       this.x += this.dashVx * speed * dt;
       this.y += this.dashVy * speed * dt;
     } else {
-      if (dx !== 0 || dy !== 0) {
+      // Keys are 8-way and must be normalised so diagonals aren't faster. The
+      // stick is already 0..1, and keeping its magnitude gives analog speed.
+      if (!Input.move.active && (dx !== 0 || dy !== 0)) {
         const len = Math.sqrt(dx * dx + dy * dy);
         dx /= len;
         dy /= len;
@@ -79,10 +90,15 @@ class Player {
     if (this.dashCooldown > 0) return false;
     const k = Input.keys;
     let dx = 0, dy = 0;
-    if (k.a) dx -= 1;
-    if (k.d) dx += 1;
-    if (k.w) dy -= 1;
-    if (k.s) dy += 1;
+    if (Input.move.active) {
+      dx = Input.move.x;
+      dy = Input.move.y;
+    } else {
+      if (k.a) dx -= 1;
+      if (k.d) dx += 1;
+      if (k.w) dy -= 1;
+      if (k.s) dy += 1;
+    }
     if (dx === 0 && dy === 0) {
       this.dashVx = Math.cos(this.facing);
       this.dashVy = Math.sin(this.facing);

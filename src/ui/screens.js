@@ -101,6 +101,63 @@ function drawGameOver(ctx, summary, scores, currentIdx) {
   ctx.fillText('RESTART', cx, b.y + b.h / 2 + 7);
 }
 
+// ---- Touch controls overlay ----
+// Only drawn once a real touch has happened, so desktop never sees it.
+function drawTouchControls(ctx) {
+  if (!Input.touchActive) return;
+
+  const ring = (x, y, r, alpha, color) => {
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.strokeStyle = color;
+    ctx.globalAlpha = alpha;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  };
+
+  ctx.save();
+
+  // Sticks: outer ring at the touch origin, filled nub at the deflection
+  const s = Input._sticks;
+  if (s.moveOrigin && s.moveId !== null) {
+    ring(s.moveOrigin.x, s.moveOrigin.y, STICK_MAX_DIST, 0.35, '#fff');
+    ctx.globalAlpha = 0.55;
+    ctx.beginPath();
+    ctx.arc(s.moveOrigin.x + Input.move.x * STICK_MAX_DIST,
+            s.moveOrigin.y + Input.move.y * STICK_MAX_DIST, 22, 0, Math.PI * 2);
+    ctx.fillStyle = '#ff4da6';
+    ctx.fill();
+  }
+  if (s.aimOrigin && s.aimId !== null) {
+    ring(s.aimOrigin.x, s.aimOrigin.y, STICK_MAX_DIST, 0.35, '#fff');
+    ctx.globalAlpha = 0.55;
+    ctx.beginPath();
+    ctx.arc(s.aimOrigin.x + Input.aim.x * STICK_MAX_DIST,
+            s.aimOrigin.y + Input.aim.y * STICK_MAX_DIST, 22, 0, Math.PI * 2);
+    ctx.fillStyle = '#00e5ff';
+    ctx.fill();
+  }
+
+  // Action buttons
+  const btn = (b, label, color, held) => {
+    ctx.globalAlpha = held ? 0.75 : 0.35;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.globalAlpha = held ? 1 : 0.7;
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, b.x, b.y + 4);
+  };
+  btn(TOUCH_BTN_MELEE, 'MIC',  '#ff4da6', Input.melee);
+  btn(TOUCH_BTN_DASH,  'DASH', '#aaaaff', Input.keys.space);
+  btn(TOUCH_BTN_PAUSE, 'II',   '#000000', false);
+
+  ctx.restore();
+}
+
 // ---- Shared UI helpers ----
 
 function pointInRect(mx, my, r) {
