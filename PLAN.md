@@ -8,7 +8,9 @@
 - **Genre:** 2D top-down wave-survival shooter
 - **Tech:** HTML5 Canvas + vanilla JavaScript (ES modules). No frameworks, no
   build step. Runs by opening `index.html` in a browser.
-- **Target:** Desktop browser (keyboard + mouse)
+- **Target:** Desktop browser (keyboard + mouse) and touch devices (twin-stick).
+  Both schemes are live at once; the on-screen controls appear only after a real
+  touch, so desktop is unaffected. See P22.
 - **Main character:** Lyasan, a K-pop idol who fights zombies
 
 ## 2. Tech / Architecture Decisions
@@ -222,6 +224,20 @@ Claude Code: propose adjustments in the plan step, not mid-code.)
       `Math.random`, so runs were never actually reproducible; and the non-daily
       run counter lived on the `Game` instance, so a page refresh reset it and
       replayed the previous session's first run.
+
+- [x] **P22 — Touch / mobile support:** Twin-stick scheme, additive to keyboard
+      and mouse. Left stick moves (analog), right stick aims and auto-fires;
+      MIC / DASH / pause buttons. Sticks use a floating origin. All of it is
+      driven from `Input`, so game logic is unchanged, and the overlay only
+      draws once `Input.touchActive` flips — desktop never sees it.
+      The canvas keeps its 800x600 logical space and is CSS-scaled to fit,
+      capped at 1:1, so every layout constant and hit-test stays valid.
+      Title hint chips (`[D]`/`[H]`/`[M]`) are tappable, since touch has no
+      keyboard and any other tap starts a run; the controls panel shows
+      whichever scheme is in use.
+      Not yet validated on real hardware — thumb reach, stick size and deadzone
+      need a device, and `STICK_MAX_DIST` / `STICK_DEADZONE` / the
+      `TOUCH_BTN_*` rects in `config.js` are the tuning knobs.
 
 ## 5. Acceptance Criteria (V1 "done")
 - Lyasan moves smoothly with WASD, can't leave the canvas.

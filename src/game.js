@@ -204,7 +204,15 @@ class Game {
 
     if (this.state === 'title') {
       this.titleReady = true;
-      if (clicked) this._startGame();
+      if (clicked) {
+        // Hint chips act as buttons (the only way to reach these on touch,
+        // where there is no keyboard and any other tap starts a run)
+        const hint = getTitleHintId(Input.mouse.x, Input.mouse.y);
+        if (hint === 'daily')       this._startDaily();
+        else if (hint === 'scores') this.state = 'leaderboard';
+        else if (hint === 'mute')   Sfx.toggleMute();
+        else                        this._startGame();
+      }
       return;
     }
 

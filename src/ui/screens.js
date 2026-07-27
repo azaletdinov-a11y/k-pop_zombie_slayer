@@ -101,6 +101,17 @@ function drawGameOver(ctx, summary, scores, currentIdx) {
   ctx.fillText('RESTART', cx, b.y + b.h / 2 + 7);
 }
 
+// Populated by drawTitle each frame so the hit-test always matches what is
+// actually on screen.
+const TITLE_HINT_RECTS = [];
+
+function getTitleHintId(mx, my) {
+  for (const r of TITLE_HINT_RECTS) {
+    if (pointInRect(mx, my, r)) return r.id;
+  }
+  return null;
+}
+
 // ---- Touch controls overlay ----
 // Only drawn once a real touch has happened, so desktop never sees it.
 function drawTouchControls(ctx) {
@@ -311,8 +322,15 @@ function drawTitle(ctx) {
   ctx.fillText('Survive the undead horde', cx, 100);
   ctx.restore();
 
-  // Controls panel — left side, clear of the character
-  const controls = [
+  // Controls panel — left side, clear of the character. Shows whichever scheme
+  // the player is actually using.
+  const controls = Input.touchActive ? [
+    ['Left stick',  'Move'],
+    ['Right stick', 'Aim + fire'],
+    ['MIC',         'Melee swing'],
+    ['DASH',        'Dash  (1.5s cd)'],
+    ['II',          'Pause'],
+  ] : [
     ['WASD',         'Move'],
     ['Mouse',        'Aim'],
     ['Left-click',   'Melee swing'],
@@ -356,14 +374,33 @@ function drawTitle(ctx) {
   ctx.save();
   ctx.font = '13px monospace';
   ctx.textAlign = 'center';
-  const hintsText = '[D] Daily #' + todaySeed() + '   [H] High scores   [M] Toggle sound';
-  const hintsW = ctx.measureText(hintsText).width + 28;
+  // Laid out as separate segments so each one can be tapped on touch devices,
+  // where "press D" is not available and any tap would otherwise start a run.
+  const segs = [
+    { id: 'daily',  text: '[D] Daily #' + todaySeed() },
+    { id: 'scores', text: '[H] High scores' },
+    { id: 'mute',   text: '[M] Toggle sound' },
+  ];
+  const GAP = 22;
+  segs.forEach(s => { s.w = ctx.measureText(s.text).width; });
+  const totalW = segs.reduce((a, s) => a + s.w, 0) + GAP * (segs.length - 1);
+  const hintsW = totalW + 28;
+  const hintsY = CANVAS_HEIGHT - 68;
   ctx.fillStyle = 'rgba(0,0,0,0.65)';
   ctx.beginPath();
-  ctx.roundRect(cx - hintsW / 2, CANVAS_HEIGHT - 68, hintsW, 24, 6);
+  ctx.roundRect(cx - hintsW / 2, hintsY, hintsW, 24, 6);
   ctx.fill();
+
   ctx.fillStyle = '#999';
-  ctx.fillText(hintsText, cx, CANVAS_HEIGHT - 51);
+  ctx.textAlign = 'left';
+  let sx = cx - totalW / 2;
+  TITLE_HINT_RECTS.length = 0;
+  for (const s of segs) {
+    ctx.fillText(s.text, sx, hintsY + 17);
+    // Generous vertical padding — this is a touch target, not just a label
+    TITLE_HINT_RECTS.push({ id: s.id, x: sx - 6, y: hintsY - 4, w: s.w + 12, h: 32 });
+    sx += s.w + GAP;
+  }
   ctx.restore();
 
   // Pulsing "Press any key" — stronger pulse, subtle glow
