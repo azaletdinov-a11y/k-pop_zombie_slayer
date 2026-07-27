@@ -1,13 +1,28 @@
 const canvas = document.getElementById('game');
 const ctx    = canvas.getContext('2d');
 
-// HiDPI / Retina fix: render at device pixel density, display at logical size
+// The game always draws in an 800x600 logical space. The canvas backing store
+// stays at that size (times DPR); only the CSS display size changes, so every
+// layout constant and hit-test stays valid at any screen size.
 const dpr = window.devicePixelRatio || 1;
 canvas.width  = CANVAS_WIDTH  * dpr;
 canvas.height = CANVAS_HEIGHT * dpr;
-canvas.style.width  = CANVAS_WIDTH  + 'px';
-canvas.style.height = CANVAS_HEIGHT + 'px';
 ctx.scale(dpr, dpr);
+
+const CANVAS_BORDER = 4; // 2px each side, outside the content box
+
+function fitCanvas() {
+  // Never scale up: on any viewport at least 800x600 this is exactly 1:1,
+  // identical to a fixed-size canvas.
+  const scale = Math.min(1,
+    (window.innerWidth  - CANVAS_BORDER) / CANVAS_WIDTH,
+    (window.innerHeight - CANVAS_BORDER) / CANVAS_HEIGHT);
+  canvas.style.width  = Math.round(CANVAS_WIDTH  * scale) + 'px';
+  canvas.style.height = Math.round(CANVAS_HEIGHT * scale) + 'px';
+}
+fitCanvas();
+window.addEventListener('resize', fitCanvas);
+window.addEventListener('orientationchange', fitCanvas);
 
 Input.init(canvas);
 const game = new Game();
