@@ -2,6 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <!-- The game loads nothing but its own files: no CDNs, no inline scripts or
+       styles, no network calls. So the policy can be as strict as it gets.
+       (frame-ancestors is header-only and unavailable on GitHub Pages.) -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self';
+    style-src 'self';
+    img-src 'self';
+    media-src 'self';
+    connect-src 'none';
+    object-src 'none';
+    base-uri 'none';
+    form-action 'none'
+  " />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>K-pop Zombie Slayer</title>
   <link rel="stylesheet" href="styles.css" />

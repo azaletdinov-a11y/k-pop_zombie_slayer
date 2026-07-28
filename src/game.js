@@ -450,10 +450,40 @@ class Game {
     }
   }
 
+  // localStorage is user-editable, so anything read back is untrusted input.
+  // Renderers call entry.score.toLocaleString() and sort on score, both of
+  // which throw or misbehave on a missing/non-numeric field — a hand-edited
+  // store could otherwise break the leaderboard and game-over screens.
+  _sanitizeScores(raw) {
+    if (!Array.isArray(raw)) return [];
+    // Values are also clamped to what the fixed-width columns can display —
+    // an absurd score would otherwise render across the whole table.
+    const cell = (v) => {
+      if (typeof v === 'number' && Number.isFinite(v)) return Math.trunc(Math.min(Math.max(v, 0), 9999));
+      if (typeof v === 'string') return v.slice(0, 6);
+      return '—';
+    };
+    return raw
+      .filter(e => e && typeof e === 'object')
+      .map(e => ({
+        score: Number.isFinite(Number(e.score))
+          ? Math.trunc(Math.min(Math.max(Number(e.score), 0), 1e12)) : 0,
+        wave:  cell(e.wave),
+        kills: cell(e.kills),
+        date:  typeof e.date === 'string' ? e.date.slice(0, 12) : '',
+        diff:  typeof e.diff === 'string' ? e.diff.slice(0, 1)  : '',
+        daily: e.daily === true || undefined,
+        seed:  Number.isFinite(Number(e.seed)) ? Number(e.seed) : undefined,
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10);
+  }
+
   _loadScores() {
     let scores;
     try { scores = JSON.parse(localStorage.getItem('kzs_scores') || '[]'); }
     catch { scores = []; }
+    scores = this._sanitizeScores(scores);
     // One-time migration of the pre-leaderboard high score
     const legacy = parseInt(localStorage.getItem('kzs_highscore'), 10);
     if (legacy > 0) {
