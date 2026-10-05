@@ -111,6 +111,10 @@ Claude Code: propose adjustments in the plan step, not mid-code.)
       back to the original placeholder shapes if an image fails to load.
       Mechanic overlays (boss HP bar/label, exploder pulse ring, shield block
       arc) render on top of sprites.
+      Exception: `splinterling.png` is authored on a coarse 16x16 grid (stored
+      at 256px), like the pickup icons. It draws at ~22px, and the original
+      512px art collapsed into a dark smudge under the 23x nearest-neighbour
+      downscale. Rule of thumb: anything drawn under ~30px gets a 16x16 grid.
 
 ### Phase 3 — Build order: P7 → P8 → P9 → P10 → P11 → P12
 
