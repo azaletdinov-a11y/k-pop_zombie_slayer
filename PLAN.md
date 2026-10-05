@@ -235,6 +235,9 @@ Claude Code: propose adjustments in the plan step, not mid-code.)
       Title hint chips (`[D]`/`[H]`/`[M]`) are tappable, since touch has no
       keyboard and any other tap starts a run; the controls panel shows
       whichever scheme is in use.
+      Button sizes are set against Apple's 44pt minimum at the smallest
+      landscape scale (375px tall → 0.625), so pause is r=36, not the original
+      r=20 (~26px on screen).
       Not yet validated on real hardware — thumb reach, stick size and deadzone
       need a device, and `STICK_MAX_DIST` / `STICK_DEADZONE` / the
       `TOUCH_BTN_*` rects in `config.js` are the tuning knobs.

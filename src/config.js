@@ -69,8 +69,9 @@ const STICK_DEADZONE = 10;  // ignore jitter below this
 const TOUCH_BTN_MELEE = { x: 705, y: 470, r: 44 };
 const TOUCH_BTN_DASH  = { x: 745, y: 360, r: 36 };
 // Sits between the centred score and the right-aligned wave text, so it does
-// not overlap either.
-const TOUCH_BTN_PAUSE = { x: 598, y: 28,  r: 20 };
+// not overlap either. r=36 keeps it at Apple's 44pt minimum even on the
+// smallest landscape phone (375px tall → canvas scaled to 0.625).
+const TOUCH_BTN_PAUSE = { x: 590, y: 42,  r: 36 };
 
 // Zombie emergence
 const EMERGE_DURATION = 0.4; // seconds to rise from underground
