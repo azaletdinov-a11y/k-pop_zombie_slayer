@@ -164,7 +164,11 @@ function drawTouchControls(ctx) {
   };
   btn(TOUCH_BTN_MELEE, 'MIC',  '#ff4da6', Input.melee);
   btn(TOUCH_BTN_DASH,  'DASH', '#aaaaff', Input.keys.space);
-  btn(TOUCH_BTN_PAUSE, 'II',   '#000000', false);
+  btn(TOUCH_BTN_PAUSE, '',     '#000000', false);
+  // Pause glyph scales with the button — a 12px "II" got lost once it grew
+  const p = TOUCH_BTN_PAUSE, barW = p.r * 0.18, barH = p.r * 0.7;
+  ctx.fillRect(p.x - barW * 1.5, p.y - barH / 2, barW, barH);
+  ctx.fillRect(p.x + barW * 0.5, p.y - barH / 2, barW, barH);
 
   ctx.restore();
 }
