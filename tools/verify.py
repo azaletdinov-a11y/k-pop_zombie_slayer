@@ -19,7 +19,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 SHOTS = os.path.join(HERE, "_shots")
 PORT, DPORT = 8137, 9222
-URL = f"http://localhost:{PORT}/index.html"
+URL = f"http://127.0.0.1:{PORT}/index.html"
 sys.path.insert(0, HERE)
 from cdp import (WS, CDP, canvas_point, click, move_mouse, key, tap_key,
                  touch, tap, screenshot, console_errors, pump)
@@ -47,7 +47,7 @@ def start_everything():
     if not chrome:
         sys.exit("No Chrome/Chromium/Edge found — install one to run browser checks.")
     _procs.append(subprocess.Popen(
-        [sys.executable, "-m", "http.server", str(PORT)], cwd=ROOT,
+        [sys.executable, "-m", "http.server", "--bind", "127.0.0.1", str(PORT)], cwd=ROOT,
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL))
     shutil.rmtree(PROFILE, ignore_errors=True)
     _procs.append(subprocess.Popen(
